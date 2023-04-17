@@ -11,7 +11,7 @@ router.get("/", (req, res) => {
   res.send("HOME PAGE");
 });
 
-////////////////REGISTRATION ROUTE/////////
+////////////////REGISTRATION ROUTE////////////////
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, password, cpassword } = req.body;
@@ -48,7 +48,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-//////////////LOGIN ROUTE/////////////
+//////////////LOGIN ROUTE////////////////
 router.post("/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -59,13 +59,22 @@ router.post("/signin", async (req, res) => {
     const existingUser = await User.findOne({ email: email });
 
     if (!existingUser) {
-      return res.status(400).json({ error: "user not found" });
-    } else {
-      res.json({ message: "user signin successfully" });
+      return res.status(400).json({ error: "User not found" });
     }
+
+    const isMatch = await bcrypt.compare(password, existingUser.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid Credentials" });
+    }
+
+    res.json({ message: "User signin successfully" });
+
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+
 module.exports = router;
