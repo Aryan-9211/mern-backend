@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 //////////REQUIRE DB CONNECTION AND SCHEMA///////////////
 require("../db/conn");
@@ -17,6 +18,8 @@ router.post("/register", async (req, res) => {
     const { name, email, phone, password, cpassword } = req.body;
     if (!name || !email || !phone || !password || !cpassword) {
       return res.status(422).json({ error: "Please fill the field properly" });
+    } else if (password != cpassword) {
+      return res.status(422).json({ error: "Password do not match" });
     }
 
     // Check if a user with the same email already exists
@@ -64,17 +67,22 @@ router.post("/signin", async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, existingUser.password);
 
+    const token = await existingUser.generateAuthToken();
+    console.log(token);
+    res.cookie("jwt", token, {
+      expires: new Date(Date.now() + 25892000000),
+      httpOnly: true,
+    });
+
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid Credentials" });
     }
 
     res.json({ message: "User signin successfully" });
-
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 module.exports = router;
