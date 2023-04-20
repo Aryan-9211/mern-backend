@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 
 dotenv.config({ path: "./config.env" });
 require("./db/conn");
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 //BODY PARSER
 // Parse incoming requests with JSON payloads
