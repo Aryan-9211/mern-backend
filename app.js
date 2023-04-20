@@ -16,28 +16,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //ROUTER
 app.use(require("./router/auth"));
 
-//MIDDLEWARE
-const middleware = (req, res, next) => {
-  console.log("middleware");
-  next();
-};
-
-app.get("/", (req, res) => {
-  res.send("Home page");
-});
-
-app.get("/about", middleware, (req, res) => {
-  res.send("About Page");
-});
-
-app.get("/signin", (req, res) => {
-  res.send("Signin Page");
-});
-
-app.get("/signout", (req, res) => {
-  res.send("signout page");
-});
-
 app.listen(PORT, () => {
-  console.log("app running");
+  console.log(`app running on port ${PORT}`);
 });

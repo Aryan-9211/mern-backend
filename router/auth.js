@@ -2,27 +2,28 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const authenticate = require("../middleware/authenticate");
+const cookieParser = require("cookie-parser");
+router.use(cookieParser());
 
 //////////REQUIRE DB CONNECTION AND SCHEMA///////////////
 require("../db/conn");
 const User = require("../models/userSchema");
-
-/////////////HOME ROUTE////////////////
-router.get("/", (req, res) => {
-  res.send("HOME PAGE");
-});
 
 ////////////////REGISTRATION ROUTE////////////////
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, password, cpassword } = req.body;
     if (!name || !email || !phone || !password || !cpassword) {
-      return res.status(422).json({ error: "Please fill the field properly" });
-    } else if (password != cpassword) {
-      return res.status(422).json({ error: "Password do not match" });
+      return res
+        .status(422)
+        .json({ error: "Please fill all the fields properly" });
     }
 
-    // Check if a user with the same email already exists
+    if (password !== cpassword) {
+      return res.status(422).json({ error: "Passwords do not match" });
+    }
+
     const existingUser = await User.findOne({ email: email });
     if (existingUser) {
       return res
@@ -34,7 +35,6 @@ router.post("/register", async (req, res) => {
     const secPass = await bcrypt.hash(password, salt);
     const seccPass = await bcrypt.hash(cpassword, salt);
 
-    // Create a new user if no user with the same email exists
     const user = new User({
       name,
       email,
@@ -55,34 +55,40 @@ router.post("/register", async (req, res) => {
 router.post("/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Invalid Credentails" });
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
     }
 
     const existingUser = await User.findOne({ email: email });
-
     if (!existingUser) {
       return res.status(400).json({ error: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, existingUser.password);
-
-    const token = await existingUser.generateAuthToken();
-    console.log(token);
-    res.cookie("jwt", token, {
-      expires: new Date(Date.now() + 25892000000),
-      httpOnly: true,
-    });
-
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid Credentials" });
     }
+
+    const token = await existingUser.generateAuthToken();
+    console.log(token);
+    res.cookie("jwtoken", token, {
+      expires: new Date(Date.now() + 25892000000),
+      httpOnly: true,
+    });
 
     res.json({ message: "User signin successfully" });
   } catch (err) {
     console.log(err);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+////////////////ABOUT US PAGE//////////////////
+router.get("/about", authenticate, (req, res) => {
+  res.send(req.rootUser);
 });
 
 module.exports = router;
