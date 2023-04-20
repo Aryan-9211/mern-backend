@@ -2,15 +2,15 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const authenticate = require("../middleware/authenticate");
+const authenticate = require("../middleware/authenticate"); // make sure to define this middleware
 const cookieParser = require("cookie-parser");
 router.use(cookieParser());
 
-//////////REQUIRE DB CONNECTION AND SCHEMA///////////////
-require("../db/conn");
-const User = require("../models/userSchema");
+// Require database connection and user schema
+require("../db/conn"); // replace with appropriate path to your database connection file
+const User = require("../models/userSchema"); // replace with appropriate path to your user schema file
 
-////////////////REGISTRATION ROUTE////////////////
+// Registration route
 router.post("/register", async (req, res) => {
   try {
     const { name, email, phone, password, cpassword } = req.body;
@@ -51,7 +51,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-//////////////LOGIN ROUTE////////////////
+// Login route
 router.post("/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -89,6 +89,13 @@ router.post("/signin", async (req, res) => {
 ////////////////ABOUT US PAGE//////////////////
 router.get("/about", authenticate, (req, res) => {
   res.send(req.rootUser);
+});
+
+////////////////LOGOUT ROUTE//////////////////
+router.get("/logout", (req, res) => {
+  console.log("logout calles");
+  res.clearCookie("jwtoken", { path: "/" });
+  res.status(200).send("User Logout");
 });
 
 module.exports = router;
